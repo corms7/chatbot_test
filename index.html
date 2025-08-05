@@ -22,7 +22,13 @@
   </div>
 
   <script>
-    const webhookUrl = "https://corms.app.n8n.cloud/webhook-test/chatbot"; // your webhook
+    const webhookUrl = "https://corms.app.n8n.cloud/webhook/chatbot"; // production webhook URL
+
+    // Generate a persistent session ID per browser
+    if (!localStorage.getItem("sessionId")) {
+      localStorage.setItem("sessionId", Math.random().toString(36).substring(2));
+    }
+    const sessionId = localStorage.getItem("sessionId");
 
     async function sendMessage() {
       const input = document.getElementById('input');
@@ -34,15 +40,17 @@
       messages.innerHTML += `<div class="msg user">${msg}</div>`;
       input.value = '';
 
-      // Send to n8n webhook
       try {
+        // Send message + sessionId to n8n
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg })
+          body: JSON.stringify({ message: msg, sessionId })
         });
 
         const data = await response.json();
+
+        // Display bot reply
         messages.innerHTML += `<div class="msg bot">${data.reply}</div>`;
       } catch (error) {
         messages.innerHTML += `<div class="msg bot">⚠️ Error: ${error.message}</div>`;
